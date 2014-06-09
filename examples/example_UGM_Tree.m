@@ -1,4 +1,4 @@
-clear all
+clear
 
 rand('state',0);
 randn('state',0);
@@ -35,10 +35,11 @@ for n = 1:nNodes
 end
 sources
 
-if 0
+if 1
 clf;
 drawGraph(adj,'labels',labels);
 %drawGraph(adj);
+drawNetwork(adj);
 pause
 end
 

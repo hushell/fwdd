@@ -24,11 +24,27 @@ MAX_ITERS = 5;
 iter = 0;
 EXIT_CONDITION = 0;
 
+[~, nt1_id] = setdiff(edgeStruct.edgeEnds, omega.t1.edgeStruct.edgeEnds, 'rows');
+[~, nt2_id] = setdiff(edgeStruct.edgeEnds, omega.t2.edgeStruct.edgeEnds, 'rows');
+nS = edgeStruct.nStates(1);
+
+edges_N_T1 = zeros(nS,nS,length(nt1_id));
+edges_N_T2 = zeros(nS,nS,length(nt2_id));
+
+edges_A_T1 = zeros(nS,nS,edgeStruct.nEdges);
+edges_A_T2 = zeros(nS,nS,edgeStruct.nEdges);
+
+edges_A_T1(:,:,nt1_id) = edges_N_T1;
+edges_A_T2(:,:,nt2_id) = edges_N_T2;
+
+edges_A_T1(:,:,setdiff(1:edgeStruct.nEdges, nt1_id)) = edgePot_T1;
+edges_A_T2(:,:,setdiff(1:edgeStruct.nEdges, nt2_id)) = edgePot_T2;
+
 omega.t1.nodePot = nodePot_T1;
-omega.t1.edgePot = edgePot_T1;
+omega.t1.edgePot = edges_A_T1;
 omega.t1.edgeStruct = edgeStruct_T1;
 omega.t2.nodePot = nodePot_T2;
-omega.t2.edgePot = edgePot_T2;
+omega.t2.edgePot = edges_A_T2;
 omega.t2.edgeStruct = edgeStruct_T2;
 
 %% main loop
@@ -39,7 +55,7 @@ while ~EXIT_CONDITION && iter < MAX_ITERS
     % solve subproblem
     tic
     fprintf('\tsolving subproblem...');
-    [nu, omega_full] = subproblem(omega);
+    nu = subproblem(omega, edgeStruct);
     fprintf('done (%.2fs)\n', toc);
     nu_vec = [nu.t1.nodes(:); nu.t1.edges(:); nu.t2.nodes(:); nu.t2.edges(:)];
     n = length(nu_vec);
@@ -92,34 +108,5 @@ end
 
 %% set nodeBel, edgeBel, logZ based on omega
 [nodeBel,edgeBel,logZ] = UGM_Infer_Tree(omega.t1.nodePot,omega.t1.edgePot,omega.t1.edgeStruct);
-
-end
-
-function nu = subproblem(omega, edgeStruct)
-
-%[shared_edges, sh_id] = intersect(omega.t1.edgeStruct.edgeEnds, omega.t1.edgeStruct.edgeEnds, 'rows');
-
-[nodes_T1,edges_T1] = UGM_Infer_Tree(omega.t1.nodePot,omega.t1.edgePot,omega.t1.edgeStruct);
-[nodes_T2,edges_T2] = UGM_Infer_Tree(omega.t2.nodePot,omega.t2.edgePot,omega.t2.edgeStruct);
-
-[~, nt1_id] = setdiff(edgeStruct.edgeEnds, omega.t1.edgeStruct.edgeEnds, 'rows');
-[~, nt2_id] = setdiff(edgeStruct.edgeEnds, omega.t2.edgeStruct.edgeEnds, 'rows');
-
-edges_N_T1 = zeros(edgeStruct.nStates,edgeStruct.nStates,length(nt1_id));
-edges_N_T2 = zeros(edgeStruct.nStates,edgeStruct.nStates,length(nt2_id));
-
-edges_A_T1 = zeros(edgeStruct.nStates,edgeStruct.nStates,edgeStruct.nEdges);
-edges_A_T2 = zeros(edgeStruct.nStates,edgeStruct.nStates,edgeStruct.nEdges);
-
-edges_A_T1(:,:,nt1_id) = edges_N_T1;
-edges_A_T2(:,:,nt2_id) = edges_N_T2;
-
-edges_A_T1(:,:,setdiff(1:edgeStruct.nEdges, nt1_id)) = edges_T1;
-edges_A_T2(:,:,setdiff(1:edgeStruct.nEdges, nt2_id)) = edges_T2;
-
-nu.t1.nodes = nodes_T1;
-nu.t1.edges = edges_A_T1;
-nu.t2.nodes = nodes_T2;
-nu.t2.edges = edges_A_T2;
 
 end
