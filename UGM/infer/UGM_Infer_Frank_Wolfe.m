@@ -95,7 +95,7 @@ end
 
 end
 
-function nu = subproblem(omega, edgeStruct)
+function [nu, omega_full] = subproblem(omega, edgeStruct)
 
 %[shared_edges, sh_id] = intersect(omega.t1.edgeStruct.edgeEnds, omega.t1.edgeStruct.edgeEnds, 'rows');
 
