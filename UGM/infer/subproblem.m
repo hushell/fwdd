@@ -1,4 +1,4 @@
-function [nu, omega_full] = subproblem(omega, edgeStruct)
+function [nu] = subproblem(omega, edgeStruct)
 
 %[shared_edges, sh_id] = intersect(omega.t1.edgeStruct.edgeEnds, omega.t1.edgeStruct.edgeEnds, 'rows');
 
@@ -8,6 +8,7 @@ function [nu, omega_full] = subproblem(omega, edgeStruct)
 [~, nt1_id] = setdiff(edgeStruct.edgeEnds, omega.t1.edgeStruct.edgeEnds, 'rows');
 [~, nt2_id] = setdiff(edgeStruct.edgeEnds, omega.t2.edgeStruct.edgeEnds, 'rows');
 
+% TODO: edgeStruct.nStates is not scalar
 edges_N_T1 = zeros(edgeStruct.nStates,edgeStruct.nStates,length(nt1_id));
 edges_N_T2 = zeros(edgeStruct.nStates,edgeStruct.nStates,length(nt2_id));
 
