@@ -1,7 +1,7 @@
-function [nu] = subproblem(omega, edgeStruct)
+function [nu] = subproblem(omega, edgeStruct, t1_id, t2_id)
 
-[~, t1_id] = intersect(edgeStruct.edgeEnds, omega.t1.edgeStruct.edgeEnds, 'rows');
-[~, t2_id] = intersect(edgeStruct.edgeEnds, omega.t2.edgeStruct.edgeEnds, 'rows');
+% [~, t1_id] = intersect(edgeStruct.edgeEnds, omega.t1.edgeStruct.edgeEnds, 'rows');
+% [~, t2_id] = intersect(edgeStruct.edgeEnds, omega.t2.edgeStruct.edgeEnds, 'rows');
 
 omega_edge_T1 = omega.t1.edgePot(:,:,t1_id);
 omega_edge_T2 = omega.t2.edgePot(:,:,t2_id);

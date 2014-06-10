@@ -3,6 +3,7 @@ clear
 close all
 
 %run('/home/hushell/working/softwares/cvx/cvx_setup')
+addpath(genpath('.'))
 
 getNoisyX_DD
 
@@ -92,4 +93,10 @@ end
 figure;
 imagesc(reshape(nodeBel(:,2),nRows,nCols));
 colormap gray
-title('Full Belief Propagation Estimates of Marginals');
+title('FWDD Estimates of Marginals');
+
+[~, nodeLabels] = max(nodeBel,[],2);
+figure;
+imagesc(reshape(nodeLabels,nRows,nCols));
+colormap gray
+title('Max of FWDD marginals');

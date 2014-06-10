@@ -3,6 +3,8 @@ close all
 
 load X.mat
 
+X = X(1:16,1:16);
+
 [nRows,nCols] = size(X);
 nNodes = nRows*nCols;
 nStates = 2;
