@@ -23,22 +23,18 @@ MAX_ITERS = 5;
 %% initialization
 iter = 0;
 EXIT_CONDITION = 0;
-
-[~, nt1_id] = setdiff(edgeStruct.edgeEnds, omega.t1.edgeStruct.edgeEnds, 'rows');
-[~, nt2_id] = setdiff(edgeStruct.edgeEnds, omega.t2.edgeStruct.edgeEnds, 'rows');
 nS = edgeStruct.nStates(1);
+nV = edgeStruct.nNodes;
+nE = edgeStruct.nEdges;
 
-edges_N_T1 = zeros(nS,nS,length(nt1_id));
-edges_N_T2 = zeros(nS,nS,length(nt2_id));
+[~, t1_id] = intersect(edgeStruct.edgeEnds, edgeStruct_T1.edgeEnds, 'rows');
+[~, t2_id] = intersect(edgeStruct.edgeEnds, edgeStruct_T2.edgeEnds, 'rows');
 
 edges_A_T1 = zeros(nS,nS,edgeStruct.nEdges);
 edges_A_T2 = zeros(nS,nS,edgeStruct.nEdges);
 
-edges_A_T1(:,:,nt1_id) = edges_N_T1;
-edges_A_T2(:,:,nt2_id) = edges_N_T2;
-
-edges_A_T1(:,:,setdiff(1:edgeStruct.nEdges, nt1_id)) = edgePot_T1;
-edges_A_T2(:,:,setdiff(1:edgeStruct.nEdges, nt2_id)) = edgePot_T2;
+edges_A_T1(:,:,t1_id) = edgePot_T1;
+edges_A_T2(:,:,t2_id) = edgePot_T2;
 
 omega.t1.nodePot = nodePot_T1;
 omega.t1.edgePot = edges_A_T1;
@@ -46,6 +42,7 @@ omega.t1.edgeStruct = edgeStruct_T1;
 omega.t2.nodePot = nodePot_T2;
 omega.t2.edgePot = edges_A_T2;
 omega.t2.edgeStruct = edgeStruct_T2;
+
 
 %% main loop
 while ~EXIT_CONDITION && iter < MAX_ITERS
@@ -67,7 +64,7 @@ while ~EXIT_CONDITION && iter < MAX_ITERS
     % solve optimization problem
     tic
     fprintf('\tsolving direction...');
-    cvx_begin quiet
+    cvx_begin %quiet
         variable s(n);
         minimize( s' * nu_vec );
         subject to
@@ -76,8 +73,8 @@ while ~EXIT_CONDITION && iter < MAX_ITERS
             s_t2_nodes = s(1+n1+n2:n1+n2+n3);
             s_t2_edges = s(1+n1+n2+n3:end);
             
-            s_t1_nodes + s_t2_nodes == nodePot;
-            s_t1_edges + s_t2_edges == edgePot;
+            s_t1_nodes + s_t2_nodes == nodePot(:);
+            s_t1_edges + s_t2_edges == edgePot(:);
     cvx_end
     fprintf('done (%.2fs)\n', toc);
     
@@ -86,6 +83,11 @@ while ~EXIT_CONDITION && iter < MAX_ITERS
     s_t1_edges = s(1+n1:n1+n2);
     s_t2_nodes = s(1+n1+n2:n1+n2+n3);
     s_t2_edges = s(1+n1+n2+n3:end);
+    
+    s_t1_nodes = reshape(s_t1_nodes, [nV,nS]);
+    s_t1_edges = reshape(s_t1_edges, [nS,nS,nE]);
+    s_t2_nodes = reshape(s_t2_nodes, [nV,nS]);
+    s_t2_edges = reshape(s_t2_edges, [nS,nS,nE]);
     
     %% step size determination
     stepSize = 2 / (iter + 2);

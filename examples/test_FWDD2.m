@@ -2,6 +2,8 @@
 clear 
 close all
 
+%run('/home/hushell/working/softwares/cvx/cvx_setup')
+
 getNoisyX_DD
 
 nTrees = 2;
