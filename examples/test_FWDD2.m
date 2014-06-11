@@ -16,6 +16,7 @@ edgeStruct_T2 = UGM_makeEdgeStruct(adj_t2,nStates);
 % initial nodePot and edgePot
 if 0 % Hand-picked parameters
 else % Learned optimal sub-modular parameters
+    % original 
     Xstd = UGM_standardizeCols(reshape(X,[1 1 nNodes]),1);
     nodePot = zeros(nNodes,nStates);
     nodePot(:,1) = exp(-1-2.5*Xstd(:));
@@ -30,6 +31,7 @@ else % Learned optimal sub-modular parameters
         edgePot(:,:,e) = [pot_same 1;1 pot_same];
     end
     
+    % spanning trees
     Xstd = UGM_standardizeCols(reshape(X,[1 1 nNodes]),1);
     nodePot_T1 = zeros(nNodes,nStates);
     nodePot_T1(:,1) = exp(-1-2.5*Xstd(:))/nTrees;
@@ -48,9 +50,9 @@ else % Learned optimal sub-modular parameters
         n1 = shared_edges(ei,1);
         n2 = shared_edges(ei,2);
 
-        pot_same = exp(1.8 + .3*1/(1+abs(Xstd(n1)-Xstd(n2))))/nTrees;
-        edgePot_T1(:,:,sh_id(ei)) = [pot_same 1;1 pot_same];
-        edgePot_T2(:,:,sh_id(ei)) = [pot_same 1;1 pot_same];
+        pot_same = exp(1.8 + .3*1/(1+abs(Xstd(n1)-Xstd(n2))));
+        edgePot_T1(:,:,sh_id(ei)) = [pot_same 1;1 pot_same] ./nTrees;
+        edgePot_T2(:,:,sh_id(ei)) = [pot_same 1;1 pot_same] ./nTrees;
     end
     
     % unique edges in T1
@@ -73,18 +75,18 @@ else % Learned optimal sub-modular parameters
 end
 
 
-% [nodeBel_T1,edgeBel_T1,logZ_T1] = UGM_Infer_Tree(nodePot_T1,edgePot_T1,edgeStruct_T1);
-% [nodeBel_T2,edgeBel_T2,logZ_T2] = UGM_Infer_Tree(nodePot_T2,edgePot_T2,edgeStruct_T2);
-% 
-% figure;
-% imagesc(reshape(nodeBel_T1(:,2),nRows,nCols));
-% colormap gray
-% title('Tree1 Belief Propagation Estimates of Marginals');
-% 
-% figure;
-% imagesc(reshape(nodeBel_T2(:,2),nRows,nCols));
-% colormap gray
-% title('Tree2 Belief Propagation Estimates of Marginals');
+[nodeBel_T1,edgeBel_T1,logZ_T1] = UGM_Infer_Tree(nodePot_T1,edgePot_T1,edgeStruct_T1);
+[nodeBel_T2,edgeBel_T2,logZ_T2] = UGM_Infer_Tree(nodePot_T2,edgePot_T2,edgeStruct_T2);
+
+figure;
+imagesc(reshape(nodeBel_T1(:,2),nRows,nCols));
+colormap gray
+title('Tree1 Belief Propagation Estimates of Marginals');
+
+figure;
+imagesc(reshape(nodeBel_T2(:,2),nRows,nCols));
+colormap gray
+title('Tree2 Belief Propagation Estimates of Marginals');
 
 %% MICHAEL
 [nodeBel,edgeBel,logZ] = UGM_Infer_Frank_Wolfe(nodePot,edgePot,edgeStruct,...
@@ -99,4 +101,4 @@ title('FWDD Estimates of Marginals');
 figure;
 imagesc(reshape(nodeLabels,nRows,nCols));
 colormap gray
-title('Max of FWDD marginals');
+title('Max of FWDD Marginals');

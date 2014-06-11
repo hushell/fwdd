@@ -3,7 +3,18 @@ close all
 
 load X.mat
 
-X = X(1:16,1:16);
+% % X = X(1:16,1:16);
+% figure;
+% imagesc(X);
+% colormap gray
+% title('Original X');
+
+% figure;
+X = X + randn(size(X))/2;
+% imagesc(X);
+% colormap gray
+% title('Noisy X');
+
 
 [nRows,nCols] = size(X);
 nNodes = nRows*nCols;
@@ -27,13 +38,15 @@ adj(sub2ind([nNodes nNodes],ind,ind+nRows)) = 1;
 adj = adj+adj';
 % edgeStruct = UGM_makeEdgeStruct(adj,nStates);
 
-% get spanning trees
+
+%% get spanning trees
 if 0 % random spanning trees
     tree = minSpan(nNodes,[edgeStruct.edgeEnds rand(edgeStruct.nEdges,1)]);
 else % 2 trees
     adj_t1 = sparse(nNodes,nNodes);
     
     % Add Down Edges
+    %ind = (nCols-1)*nRows+1:nRows*nCols;
     ind = 1:nRows;
     exclude = sub2ind([nRows nCols],repmat(nRows,[1 nCols]),1:nCols); % No Down edge for last row
     ind = setdiff(ind,exclude);
@@ -46,9 +59,8 @@ else % 2 trees
     adj_t1(sub2ind([nNodes nNodes],ind,ind+nRows)) = 1;
 
     % Add Up/Left Edges
-    assert(tree_graph(adj_t1));
+%     assert(tree_graph(adj_t1));
     adj_t1 = adj_t1+adj_t1';
-    
     
     
     adj_t2 = sparse(nNodes,nNodes);
@@ -66,7 +78,7 @@ else % 2 trees
     adj_t2(sub2ind([nNodes nNodes],ind,ind+nRows)) = 1;
 
     % Add Up/Left Edges
-    assert(tree_graph(full(adj_t2)));
+%     assert(tree_graph(full(adj_t2)));
     adj_t2 = adj_t2+adj_t2';
     
     
