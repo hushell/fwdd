@@ -1,25 +1,9 @@
-function [nodeBel, edgeBel, logZ] = UGM_Infer_Frank_Wolfe(nodePot, edgePot, edgeStruct, ...
+function [nodeBel, edgeBel, logZ, gaps] = UGM_Infer_FWDD(nodePot, edgePot, edgeStruct, ...
     nodePot_T1, edgePot_T1, edgeStruct_T1, nodePot_T2, edgePot_T2, edgeStruct_T2)
-%UGM_Infer_Frank_Wolfe
-% INPUT
-% Original Problem:
-% nodePot(node,class)
-% edgePot(class,class,edge) where e is referenced by V,E (must be the same
-% between feature engine and inference engine)
-%
-% Subproblems T1, T2: same except with _T1 or _T2
-% Subproblems must be trees that summed together get back the original
-%
-% OUTPUT
-% nodeBel(node,class) - marginal beliefs
-% edgeBel(class,class,e) - pairwise beliefs
-% logZ - negative of free energy
-
-%% ***** Frank Wolfe Algorithm *****
-
+    %nodePotTrees, edgePotTrees, edgeStructTrees)
 %% parameters
-MAX_ITERS = 10;
-gap_threshold = 1e+3;
+MAX_ITERS = 100;
+gap_threshold = 1e+2;
 
 %% initialization
 iter = 1;
@@ -53,6 +37,7 @@ omega_vec = [omega.t1.nodePot(:);omega.t1.edgePot(:);omega.t2.nodePot(:);omega.t
 
 
 %% main loop
+gaps = zeros(1,MAX_ITERS);
 while ~EXIT_CONDITION && iter < MAX_ITERS
     fprintf('iter %d...\n', iter);
     %% direction-finding subproblem
@@ -72,39 +57,26 @@ while ~EXIT_CONDITION && iter < MAX_ITERS
     n2 = length(nu.t1.edges(:));
     n3 = length(nu.t2.nodes(:));
     n4 = length(nu.t2.edges(:));
+    s = zeros(n,1);
     
     % solve LB optimization problem
     tic
     fprintf('\tsolving lower bound...\n');
 
-    t1_lid = zeros(1,edgeStruct.nEdges);
-    t1_lid(t1_id) = 1;
-    t2_lid = zeros(1,edgeStruct.nEdges);
-    t2_lid(t2_id) = 1;
-    
-    Aeq_t1 = zeros(1,n2);
-    Aeq_t1(1:4:end) = t1_lid;
-    Aeq_t1(2:4:end) = t1_lid;
-    Aeq_t1(3:4:end) = t1_lid;
-    Aeq_t1(4:4:end) = t1_lid;
-    
-    Aeq_t2 = zeros(1,n4);
-    Aeq_t2(1:4:end) = t2_lid;
-    Aeq_t2(2:4:end) = t2_lid;
-    Aeq_t2(3:4:end) = t2_lid;
-    Aeq_t2(4:4:end) = t2_lid;
-    
-    Aeq = [sparse(diag(1:n1)), sparse(zeros(n1,n2)), sparse(diag(1:n3)), sparse(zeros(n1,n4)); 
-        sparse(zeros(n2,n1)), sparse(diag(Aeq_t1)), sparse(zeros(n2,n3)), sparse(diag(Aeq_t2))];
-    beq = [nodePot(:); edgePot(:)];
-    
-    [s,fval,exitflag] = linprog(nu_vec, [], [], Aeq, beq, zeros(n,1));
+    cvx_begin quiet
+        variable s(n)
+        minimize( nu_vec'* s )
+        subject to
+            s(1:n1) + s(1+n1+n2:n1+n2+n3) == nodePot(:);
+            s(1+n1:n1+n2) + s(1+n1+n2+n3:end) == edgePot(:);
+            s >= 0;
+    cvx_end
     
     fprintf('done (%.2fs)\n', toc);
-    assert(exitflag == 1);
     
     %% check exit condition
     duality_gap = (omega_vec - s)'*nu_vec;
+    gaps(iter) = duality_gap;
     fprintf('*** current gap: %g, lower bound: %g\n', duality_gap, logZ_t - duality_gap);
     if duality_gap < gap_threshold
         EXIT_CONDITION = 1; % TODO gap isn't like what I expected
@@ -121,7 +93,6 @@ while ~EXIT_CONDITION && iter < MAX_ITERS
     omega.t1.edgePot = reshape(omega_vec(1+n1:n1+n2), [nS,nS,nE]);
     omega.t2.nodePot = reshape(omega_vec(1+n1+n2:n1+n2+n3), [nV,nS]);
     omega.t2.edgePot = reshape(omega_vec(1+n1+n2+n3:end), [nS,nS,nE]);
-    
     
     iter = iter + 1;
 end

@@ -2,7 +2,7 @@
 clear 
 close all
 
-%run('/home/hushell/working/softwares/cvx/cvx_setup')
+% run('/home/hushell/working/softwares/cvx/cvx_setup')
 addpath(genpath('.'))
 
 getNoisyX_DD
@@ -89,7 +89,9 @@ colormap gray
 title('Tree2 Belief Propagation Estimates of Marginals');
 
 %% MICHAEL
-[nodeBel,edgeBel,logZ] = UGM_Infer_Frank_Wolfe(nodePot,edgePot,edgeStruct,...
+% [nodeBel,edgeBel,logZ] = UGM_Infer_Frank_Wolfe(nodePot,edgePot,edgeStruct,...
+%     nodePot_T1,edgePot_T1,edgeStruct_T1, nodePot_T2,edgePot_T2,edgeStruct_T2);
+[nodeBel,edgeBel,logZ] = UGM_Infer_FWDD(nodePot,edgePot,edgeStruct,...
     nodePot_T1,edgePot_T1,edgeStruct_T1, nodePot_T2,edgePot_T2,edgeStruct_T2);
 
 figure;

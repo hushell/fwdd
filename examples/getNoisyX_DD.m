@@ -9,11 +9,11 @@ load X.mat
 % colormap gray
 % title('Original X');
 
-% figure;
+figure;
 X = X + randn(size(X))/2;
-% imagesc(X);
-% colormap gray
-% title('Noisy X');
+imagesc(X);
+colormap gray
+title('Noisy X');
 
 
 [nRows,nCols] = size(X);
